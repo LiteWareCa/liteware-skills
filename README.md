@@ -2,7 +2,7 @@
 
 [Agent Skills](https://agentskills.io) that encode **Liteware engineering standards** — workflow, architecture principles, and language-specific tooling rules. Drop these into any compatible AI coding assistant to get consistent, opinionated guidance across every Liteware project.
 
-> **Agent Skills** is an open standard originally created by Anthropic, supported by Claude Code, GitHub Copilot CLI, Gemini CLI, Cursor, Windsurf, OpenCode, and more. A skill is a folder containing a `SKILL.md` file with metadata and instructions that the agent loads on demand.
+> **Agent Skills** is an open standard originally created by Anthropic, supported by GitHub Copilot CLI, Claude Code, Gemini CLI, Cursor, Windsurf, OpenCode, and more. A skill is a folder containing a `SKILL.md` file with metadata and instructions that the agent loads on demand.
 
 ## Skills
 
@@ -21,7 +21,60 @@
 
 ## Installation
 
-### Claude Code (recommended — native skills support)
+### GitHub Copilot CLI — via `gh skill` (recommended)
+
+The cleanest install uses the [`gh skill`](https://cli.github.com/manual/gh_skill) command (GitHub CLI ≥ v2.90):
+
+```bash
+# Preview a skill before installing
+gh skill preview LiteWareCa/liteware-skills liteware-project
+
+# Install as personal skills (available in all projects)
+gh skill install LiteWareCa/liteware-skills liteware-project
+gh skill install LiteWareCa/liteware-skills liteware-python
+
+# Or install both in one interactive flow
+gh skill install LiteWareCa/liteware-skills
+```
+
+Skills are installed to `~/.copilot/skills/` by default. They will appear in `/skills list` inside the CLI.
+
+To update later:
+```bash
+gh skill update --all
+```
+
+### GitHub Copilot CLI — manual install
+
+If you prefer not to use `gh skill`:
+
+```bash
+git clone https://github.com/LiteWareCa/liteware-skills
+cp -r liteware-skills/skills/liteware-project ~/.copilot/skills/
+cp -r liteware-skills/skills/liteware-python  ~/.copilot/skills/
+```
+
+Then inside the CLI, run `/skills reload` to pick them up without restarting.
+
+> **`/skills add`** adds an alternative *local directory* to search for skills — it does not accept URLs. Use `gh skill install` for URL-based install.
+
+### Project-level skills (any tool)
+
+To apply these skills automatically to a specific project — without installing them globally — copy them into your repository:
+
+```bash
+# Works with Copilot CLI, Claude Code, Gemini CLI, and VS Code agent mode
+mkdir -p .github/skills
+cp -r ~/.copilot/skills/liteware-project .github/skills/
+cp -r ~/.copilot/skills/liteware-python  .github/skills/
+```
+
+Any of these directories are scanned automatically:
+- `.github/skills/` — standard, picked up by Copilot CLI and Claude Code
+- `.claude/skills/` — Claude Code and Copilot CLI
+- `.agents/skills/` — universal
+
+### Claude Code — native skills support
 
 Claude Code supports Agent Skills natively via the `/plugin` command:
 
@@ -36,25 +89,12 @@ Then install individual skills:
 /plugin install liteware-python@liteware-skills
 ```
 
-Or place skill files directly in `~/.claude/skills/`:
+Or install directly to `~/.claude/skills/`:
 
 ```bash
-git clone https://github.com/LiteWareCa/liteware-skills
-cp -r liteware-skills/skills/liteware-project ~/.claude/skills/
-cp -r liteware-skills/skills/liteware-python  ~/.claude/skills/
+gh skill install LiteWareCa/liteware-skills liteware-project --agent claude-code --scope user
+gh skill install LiteWareCa/liteware-skills liteware-python  --agent claude-code --scope user
 ```
-
-### GitHub Copilot CLI
-
-Copilot CLI loads skills from `~/.copilot/skills/`. Use the `/skills` command inside the CLI to manage them, or install manually:
-
-```bash
-git clone https://github.com/LiteWareCa/liteware-skills
-cp -r liteware-skills/skills/liteware-project ~/.copilot/skills/
-cp -r liteware-skills/skills/liteware-python  ~/.copilot/skills/
-```
-
-> **Tip:** Copilot CLI also reads `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` from the repository root and your home config. You can paste skill content into any of these files as an alternative to the skills directory.
 
 ### Gemini CLI
 
@@ -64,29 +104,19 @@ cp -r liteware-skills/skills/liteware-project ~/.gemini/skills/
 cp -r liteware-skills/skills/liteware-python  ~/.gemini/skills/
 ```
 
-### Any compatible tool (install script)
-
-```bash
-git clone https://github.com/LiteWareCa/liteware-skills
-cd liteware-skills
-
-./install.sh                      # GitHub Copilot CLI (default)
-./install.sh --tool claude        # Claude Code → ~/.claude/skills/
-./install.sh --tool gemini        # Gemini CLI → ~/.gemini/skills/
-
-# Install specific skills only
-./install.sh --tool copilot --skills liteware-project
-```
-
 ---
 
-## Updating
+## Compatibility
 
-```bash
-cd /path/to/liteware-skills
-git pull
-./install.sh --tool <your-tool>   # re-run to apply updates
-```
+| Tool | Recommended install | Personal skill path | Project skill path |
+|------|--------------------|--------------------|-------------------|
+| GitHub Copilot CLI | `gh skill install LiteWareCa/liteware-skills <skill>` | `~/.copilot/skills/` | `.github/skills/`, `.claude/skills/`, `.agents/skills/` |
+| Claude Code | `/plugin marketplace add LiteWareCa/liteware-skills` | `~/.claude/skills/` | `.github/skills/`, `.claude/skills/` |
+| Gemini CLI | copy | `~/.gemini/skills/` | `.github/skills/` |
+| VS Code (agent mode) | `gh skill install` | `~/.copilot/skills/` | `.github/skills/` |
+| Cursor / Windsurf | copy | tool-specific | `.github/skills/` |
+
+All tools respect the [Agent Skills](https://agentskills.io) open standard (`SKILL.md` with YAML frontmatter).
 
 ---
 
@@ -128,15 +158,3 @@ git pull
 - pytest + pytest-asyncio + pytest-cov — ≥90% coverage
 - `python:3.11-slim`+ base image, `uv` for installs, layer-caching `pyproject.toml`
 
----
-
-## Compatibility
-
-| Tool | Install method | Skill path |
-|------|---------------|-----------|
-| Claude Code | `/plugin marketplace add LiteWareCa/liteware-skills` | `~/.claude/skills/` |
-| GitHub Copilot CLI | `/skills` command or copy | `~/.copilot/skills/` |
-| Gemini CLI | Copy | `~/.gemini/skills/` |
-| Cursor / Windsurf / OpenCode | Copy | Tool-specific skills dir |
-
-All tools respect the [Agent Skills](https://agentskills.io) open standard (`SKILL.md` with YAML frontmatter).
