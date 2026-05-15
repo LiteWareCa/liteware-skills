@@ -29,15 +29,19 @@ The cleanest install uses the [`gh skill`](https://cli.github.com/manual/gh_skil
 # Preview a skill before installing
 gh skill preview LiteWareCa/liteware-skills liteware-project
 
-# Install as personal skills (available in all projects)
+# Install interactively (prompts for target agent and scope)
 gh skill install LiteWareCa/liteware-skills liteware-project
 gh skill install LiteWareCa/liteware-skills liteware-python
-
-# Or install both in one interactive flow
-gh skill install LiteWareCa/liteware-skills
 ```
 
-Skills are installed to `~/.copilot/skills/` by default. They will appear in `/skills list` inside the CLI.
+Or skip all prompts — install both globally for Copilot CLI in one shot:
+
+```bash
+gh skill install LiteWareCa/liteware-skills liteware-project --agent copilot --scope user
+gh skill install LiteWareCa/liteware-skills liteware-python  --agent copilot --scope user
+```
+
+Skills are installed to `~/.copilot/skills/` and appear in `/skills list` inside the CLI.
 
 To update later:
 ```bash
