@@ -3,6 +3,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILLS_DIR="$REPO_DIR/skills"
 TOOL="copilot"
 SKILLS=()
 
@@ -29,16 +30,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Default: all skill directories
+# Default: all skill directories under skills/
 if [[ ${#SKILLS[@]} -eq 0 ]]; then
-  mapfile -t SKILLS < <(find "$REPO_DIR" -maxdepth 1 -mindepth 1 -type d -not -name '.*' | xargs -I{} basename {})
+  mapfile -t SKILLS < <(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d | xargs -I{} basename {})
 fi
 
 install_copilot() {
   local dest="$HOME/.copilot/skills"
   mkdir -p "$dest"
   for skill in "${SKILLS[@]}"; do
-    local src="$REPO_DIR/$skill"
+    local src="$SKILLS_DIR/$skill"
     [[ -d "$src" ]] || { echo "Warning: skill '$skill' not found, skipping"; continue; }
     rm -rf "$dest/$skill"
     cp -r "$src" "$dest/$skill"
@@ -47,17 +48,14 @@ install_copilot() {
 }
 
 install_claude() {
-  local dest="$HOME/.claude/CLAUDE.md"
-  mkdir -p "$(dirname "$dest")"
-  # Strip YAML frontmatter (--- ... ---) and append instructions
+  local dest="$HOME/.claude/skills"
+  mkdir -p "$dest"
   for skill in "${SKILLS[@]}"; do
-    local src="$REPO_DIR/$skill/SKILL.md"
-    [[ -f "$src" ]] || { echo "Warning: skill '$skill' not found, skipping"; continue; }
-    echo "" >> "$dest"
-    echo "<!-- liteware-skill: $skill -->" >> "$dest"
-    # Strip frontmatter block (lines between first two ---)
-    awk '/^---/{found++; next} found==1{next} {print}' "$src" >> "$dest"
-    echo "✓ Appended $skill → $dest"
+    local src="$SKILLS_DIR/$skill"
+    [[ -d "$src" ]] || { echo "Warning: skill '$skill' not found, skipping"; continue; }
+    rm -rf "$dest/$skill"
+    cp -r "$src" "$dest/$skill"
+    echo "✓ Installed $skill → $dest/$skill"
   done
 }
 
@@ -65,7 +63,7 @@ install_gemini() {
   local dest="$HOME/.gemini/skills"
   mkdir -p "$dest"
   for skill in "${SKILLS[@]}"; do
-    local src="$REPO_DIR/$skill"
+    local src="$SKILLS_DIR/$skill"
     [[ -d "$src" ]] || { echo "Warning: skill '$skill' not found, skipping"; continue; }
     rm -rf "$dest/$skill"
     cp -r "$src" "$dest/$skill"

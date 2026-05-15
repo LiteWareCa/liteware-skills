@@ -1,70 +1,81 @@
 # Liteware Skills
 
-Portable AI coding-assistant skills that encode **Liteware engineering standards** — workflow, architecture principles, and language-specific tooling rules. Drop these into your AI assistant to get consistent, opinionated guidance across every Liteware project.
+[Agent Skills](https://agentskills.io) that encode **Liteware engineering standards** — workflow, architecture principles, and language-specific tooling rules. Drop these into any compatible AI coding assistant to get consistent, opinionated guidance across every Liteware project.
+
+> **Agent Skills** is an open standard originally created by Anthropic, supported by Claude Code, GitHub Copilot CLI, Gemini CLI, Cursor, Windsurf, OpenCode, and more. A skill is a folder containing a `SKILL.md` file with metadata and instructions that the agent loads on demand.
 
 ## Skills
 
 | Skill | Scope | Use when |
 |---|---|---|
-| [`liteware-project`](./liteware-project/SKILL.md) | Language-agnostic | Every Liteware project |
-| [`liteware-python`](./liteware-python/SKILL.md) | Python-specific | Any project with a Python backend |
+| [`liteware-project`](./skills/liteware-project/SKILL.md) | Language-agnostic | Every Liteware project |
+| [`liteware-python`](./skills/liteware-python/SKILL.md) | Python-specific | Any project with a Python backend |
 
 ### Skill hierarchy
 
-`liteware-project` is the foundation — it covers architecture, reliability, observability, workflow, git standards, containerisation, and the task implementation loop for **any** language or stack.
+`liteware-project` is the foundation — architecture, reliability, observability, workflow, git standards, containerisation, and the task implementation loop for **any** language or stack.
 
-`liteware-python` (and future language skills) layer on top, adding ecosystem-specific tooling: which linter, which test framework, which base Docker image, etc.
+`liteware-python` layers on top with Python-specific tooling: asyncio, pydantic-settings, ruff/black, pytest, Docker base images, etc.
 
 ---
 
 ## Installation
 
+### Claude Code (recommended — native skills support)
+
+Claude Code supports Agent Skills natively via the `/plugin` command:
+
+```
+/plugin marketplace add LiteWareCa/liteware-skills
+```
+
+Then install individual skills:
+
+```
+/plugin install liteware-project@liteware-skills
+/plugin install liteware-python@liteware-skills
+```
+
+Or place skill files directly in `~/.claude/skills/`:
+
+```bash
+git clone https://github.com/LiteWareCa/liteware-skills
+cp -r liteware-skills/skills/liteware-project ~/.claude/skills/
+cp -r liteware-skills/skills/liteware-python  ~/.claude/skills/
+```
+
 ### GitHub Copilot CLI
 
-```bash
-# Clone into the Copilot skills directory
-git clone https://github.com/LiteWareCa/liteware-skills ~/.copilot/skills-repo
-
-# Symlink (or copy) the skills you want into the skills directory
-ln -s ~/.copilot/skills-repo/liteware-project ~/.copilot/skills/liteware-project
-ln -s ~/.copilot/skills-repo/liteware-python  ~/.copilot/skills/liteware-python
-```
-
-Or use the install script (see below).
-
-### Claude Code
-
-Add the skill content to your project's `CLAUDE.md` or your user-level `~/.claude/CLAUDE.md`:
+Copilot CLI loads skills from `~/.copilot/skills/`. Use the `/skills` command inside the CLI to manage them, or install manually:
 
 ```bash
-# Append both skills to your user-level Claude instructions
-cat liteware-project/SKILL.md liteware-python/SKILL.md >> ~/.claude/CLAUDE.md
+git clone https://github.com/LiteWareCa/liteware-skills
+cp -r liteware-skills/skills/liteware-project ~/.copilot/skills/
+cp -r liteware-skills/skills/liteware-python  ~/.copilot/skills/
 ```
+
+> **Tip:** Copilot CLI also reads `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` from the repository root and your home config. You can paste skill content into any of these files as an alternative to the skills directory.
 
 ### Gemini CLI
 
 ```bash
-# Place skills in the Gemini skills directory
-cp -r liteware-project liteware-python ~/.gemini/skills/
+git clone https://github.com/LiteWareCa/liteware-skills
+cp -r liteware-skills/skills/liteware-project ~/.gemini/skills/
+cp -r liteware-skills/skills/liteware-python  ~/.gemini/skills/
 ```
 
----
-
-## Install Script
-
-The `install.sh` script automates installation for a given tool:
+### Any compatible tool (install script)
 
 ```bash
-# Install for Copilot CLI (default)
-./install.sh
+git clone https://github.com/LiteWareCa/liteware-skills
+cd liteware-skills
 
-# Install for a specific tool
-./install.sh --tool copilot
-./install.sh --tool claude
-./install.sh --tool gemini
+./install.sh                      # GitHub Copilot CLI (default)
+./install.sh --tool claude        # Claude Code → ~/.claude/skills/
+./install.sh --tool gemini        # Gemini CLI → ~/.gemini/skills/
 
 # Install specific skills only
-./install.sh --skills liteware-project,liteware-python --tool copilot
+./install.sh --tool copilot --skills liteware-project
 ```
 
 ---
@@ -72,19 +83,24 @@ The `install.sh` script automates installation for a given tool:
 ## Updating
 
 ```bash
-cd ~/.copilot/skills-repo   # or wherever you cloned
+cd /path/to/liteware-skills
 git pull
+./install.sh --tool <your-tool>   # re-run to apply updates
 ```
-
-If you used symlinks, the update is instant. If you copied files, re-run `install.sh`.
 
 ---
 
 ## Adding a New Language Skill
 
-1. Create a directory: `liteware-<language>/`
-2. Add `SKILL.md` with YAML frontmatter (`name`, `description`) and the skill instructions
-3. Reference it from this README
+1. Create `skills/liteware-<language>/SKILL.md` with YAML frontmatter:
+   ```yaml
+   ---
+   name: liteware-<language>
+   description: <language>-specific engineering rules for Liteware projects. ...
+   ---
+   ```
+2. Add skill instructions below the frontmatter
+3. Add an entry to this README's skills table
 4. Open a PR
 
 ---
@@ -111,3 +127,16 @@ If you used symlinks, the update is instant. If you copied files, re-run `instal
 - Full PEP 484 type hints — mypy/pyright strict, no bare `Any`
 - pytest + pytest-asyncio + pytest-cov — ≥90% coverage
 - `python:3.11-slim`+ base image, `uv` for installs, layer-caching `pyproject.toml`
+
+---
+
+## Compatibility
+
+| Tool | Install method | Skill path |
+|------|---------------|-----------|
+| Claude Code | `/plugin marketplace add LiteWareCa/liteware-skills` | `~/.claude/skills/` |
+| GitHub Copilot CLI | `/skills` command or copy | `~/.copilot/skills/` |
+| Gemini CLI | Copy | `~/.gemini/skills/` |
+| Cursor / Windsurf / OpenCode | Copy | Tool-specific skills dir |
+
+All tools respect the [Agent Skills](https://agentskills.io) open standard (`SKILL.md` with YAML frontmatter).
